@@ -1,19 +1,25 @@
-import { isObject, isUndefined } from './utils'
+import { isObject, isArray, isUndefined } from './utils'
 
 /**
  * 递归创建查询内容
  * @param {*} keys
  */
-const createKeys = (keys, str = '') => {
-  keys.forEach((item, index) => {
+const createFields = (fields, str = '') => {
+  fields.forEach((item, index) => {
     if (isObject(item)) {
-      str += `${item.field}{`
-      str += createKeys(item.keys)
-      str += `}`
+      const fieldKeys = Object.keys(item)
+      fieldKeys.forEach((key, i) => {
+        str += `${key}{`
+        str += createFields(item[key])
+        str += `}`
+        if (i < fieldKeys.length - 1) {
+          str += ",";
+        }
+      })
     } else {
       str += item;
     }
-    if (index !== keys.length - 1) {
+    if (index !== fields.length - 1) {
       str += ",";
     }
   });
@@ -24,29 +30,39 @@ const createKeys = (keys, str = '') => {
  * 创建符合GraphQL的查询字符串
  * @param {*} params
  */
-const createQuery = ({ params = {}, keys = [] }) => {
+const create = (queries, { operation = '', argument = {}, fields = [] }) => {
   let query = "";
-  if (fun && isArray(keys)) {
-    query = "{query" + fun;
-    if (isObject(params)) {
+  if (operation && isArray(fields)) {
+    query = "{" + operation;
+    if (isObject(argument)) {
       query += "(";
-      for (let key in params) {
-        const k = params[key];
+      for (let key in argument) {
+        const k = argument[key];
         if (isObject(k) && !isUndefined(k.type) && !isUndefined(k.value)) {
           switch (k.type) {
             case "String":
               query += key + ':"' + k.value + '",';
           }
         } else {
-          query += key + ":" + params[key] + ",";
+          query += key + ":" + argument[key] + ",";
         }
       }
       query += ")";
     }
-    query += `{${createKeys(keys)}}}`;
+    query += `{${createFields(fields)}}}`;
   }
-  return query;
+
+  const result = {}
+
+  result[queries] = query
+
+  return result;
 };
+
+
+const createQuery = (options) => {
+  return create('query', options)
+}
 
 export default {
   query: createQuery,
