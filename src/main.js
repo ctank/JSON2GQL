@@ -30,33 +30,34 @@ const createFields = (fields, str = '') => {
  * 创建符合GraphQL的查询字符串
  * @param {*} params
  */
-const create = (queries, { operation = '', argument = {}, fields = [] }) => {
-  let query = "";
-  if (operation && isArray(fields)) {
-    query = "{" + operation;
-    if (isObject(argument)) {
-      query += "(";
-      for (let key in argument) {
-        const k = argument[key];
-        if (isObject(k) && !isUndefined(k.type) && !isUndefined(k.value)) {
-          switch (k.type) {
-            case "String":
-              query += key + ':"' + k.value + '",';
+const create = (queries, options = []) => {
+  let query = ''
+  if (options.length > 0) {
+    query += "{";
+    options.forEach(({ operation = '', argument = {}, fields = [] }) => {
+      if (operation && isArray(fields)) {
+        query += operation;
+        if (isObject(argument)) {
+          query += "(";
+          for (let key in argument) {
+            const k = argument[key];
+            if (isObject(k) && !isUndefined(k.type) && !isUndefined(k.value)) {
+              switch (k.type) {
+                case "String":
+                  query += key + ':"' + k.value + '",';
+              }
+            } else {
+              query += key + ":" + argument[key] + ",";
+            }
           }
-        } else {
-          query += key + ":" + argument[key] + ",";
+          query += ")";
         }
+        query += `{${createFields(fields)}},`;
       }
-      query += ")";
-    }
-    query += `{${createFields(fields)}}}`;
+    })
+    query += '}'
   }
-
-  const result = {}
-
-  result[queries] = query
-
-  return result;
+  return query
 };
 
 
