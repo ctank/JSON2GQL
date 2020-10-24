@@ -31,10 +31,10 @@ const createFields = (fields, str = '') => {
  * @param {*} params
  */
 const create = (queries, options = []) => {
-  let query = ''
+  let query = '' + queries
   if (options.length > 0) {
     query += "{";
-    options.forEach(({ operation = '', argument = {}, fields = [] }) => {
+    options.forEach(({ operation = '', argument, fields }) => {
       if (operation && isArray(fields)) {
         query += operation;
         if (isObject(argument)) {
@@ -65,7 +65,12 @@ const createQuery = (options) => {
   return create('query', options)
 }
 
+const createMutation = (options) => {
+  return create('mutation', options)
+}
+
 export default {
   query: createQuery,
+  mutation: createMutation,
   version: 'v0.0.1'
 }
